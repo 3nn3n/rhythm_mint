@@ -14,6 +14,152 @@ export type Muzica = {
   },
   "instructions": [
     {
+      "name": "createEscrowAta",
+      "discriminator": [
+        203,
+        225,
+        65,
+        46,
+        132,
+        152,
+        224,
+        108
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "track",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  99,
+                  107
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "trackId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrowTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "trackId",
+          "type": "u64"
+        },
+        {
+          "name": "authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "escrowDeposit",
+      "discriminator": [
+        137,
+        100,
+        252,
+        219,
+        140,
+        205,
+        146,
+        215
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "signer": true
+        },
+        {
+          "name": "track",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  99,
+                  107
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "trackId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrowTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "payerTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "trackId",
+          "type": "u64"
+        },
+        {
+          "name": "authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "initializeTrack",
       "discriminator": [
         14,
@@ -236,6 +382,19 @@ export type Muzica = {
   ],
   "events": [
     {
+      "name": "escrowDeposited",
+      "discriminator": [
+        28,
+        193,
+        105,
+        27,
+        40,
+        101,
+        65,
+        211
+      ]
+    },
+    {
       "name": "sharesUpdated",
       "discriminator": [
         137,
@@ -320,6 +479,30 @@ export type Muzica = {
     }
   ],
   "types": [
+    {
+      "name": "escrowDeposited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "trackId",
+            "type": "u64"
+          },
+          {
+            "name": "depositor",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
     {
       "name": "sharesUpdated",
       "type": {

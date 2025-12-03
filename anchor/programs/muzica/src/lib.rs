@@ -1,8 +1,6 @@
-// Muzica: Anchor program — Track Registry + Escrow Splitter + Helpers
-// File: programs/muzica/src/lib.rs
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, TokenAccount, Transfer, Token, SetAuthority, MintTo};
+use anchor_spl::token:: {Mint, Token, TokenAccount, Transfer};
 use anchor_spl::associated_token;
 
 declare_id!("9NVaiC6n62KnMtVYUCcfdDY1KdAFNyZmnopdhTcvHnwJ");
@@ -90,9 +88,124 @@ pub mod muzica {
         });
 
         Ok(())
+    }
+
+    pub fn create_escrow_ata(ctx: Context<CreateEscrowAta>, track_id: u64, authority: Pubkey) -> Result<()> {
+
+        require!(ctx.accounts.track.track_id == track_id, ErrorCode::InvalidArgs);
+        require!(ctx.accounts.track.authority == authority, ErrorCode::InvalidArgs);
+
+        let cpi_accounts = associated_token::Create {
+            payer: ctx.accounts.payer.to_account_info(),
+            associated_token: ctx.accounts.escrow_token_account.to_account_info(),
+            authority: ctx.accounts.track.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
+            token_program: ctx.accounts.token_program.to_account_info(),
+        };        
+
+        let cpi_program = ctx.accounts.associated_token_program.to_account_info();
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        associated_token::create(cpi_ctx)?;
+
+        Ok(())
+    }
+
+    pub fn escrow_deposit(ctx: Context<EscrowDeposit>, amount: u64, track_id: u64, authority: Pubkey) -> Result<()> {
+
+        require!(amount > 0, ErrorCode::InvalidAmount);
+        require!(ctx.accounts.track.track_id == track_id, ErrorCode::InvalidArgs);
+        require!(ctx.accounts.track.authority == authority, ErrorCode::InvalidArgs);
+        require!(ctx.accounts.escrow_token_account.owner == ctx.accounts.track.key(), ErrorCode::InvalidTokenAccountOwner);
+
+            let cpi_accounts = Transfer {
+                from: ctx.accounts.payer_token_account.to_account_info(),
+                to: ctx.accounts.escrow_token_account.to_account_info(),
+                authority: ctx.accounts.payer.to_account_info(),
+            };
+
+            let cpi_program = ctx.accounts.token_program.to_account_info();
+            let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+            anchor_spl::token::transfer(cpi_ctx, amount)?;
+
+            emit!(EscrowDeposited {
+                track_id: ctx.accounts.track.track_id,
+                depositor: ctx.accounts.payer.key(),
+                amount,
+                mint: ctx.accounts.escrow_token_account.mint,
+            });
+
+        Ok(())
+    }
+
+
+}
+
+
+    #[event]
+    pub struct EscrowDeposited {
+        pub track_id: u64,
+        pub depositor: Pubkey,
+        pub amount: u64,
+        pub mint: Pubkey,
+    }
+
+    #[derive(Accounts)]
+    #[instruction(amount: u64, track_id: u64, authority: Pubkey)]
+    pub struct EscrowDeposit<'info> {
+        pub payer: Signer<'info>,
+
+        #[account(
+            mut,
+            seeds = [
+                b"track".as_ref(), 
+                authority.key().as_ref(), 
+                track_id.to_le_bytes().as_ref()
+                ],
+            bump,
+        )]
+        pub track: Account<'info, Track>,
+
+        #[account(mut)]
+        pub escrow_token_account: Account<'info, TokenAccount>,
+
+        #[account(mut)]
+        pub payer_token_account: Account<'info, TokenAccount>,
+
+        pub token_program: Program<'info, Token>,
 
     }
-}
+
+
+
+    #[derive(Accounts)]
+    #[instruction(track_id: u64, authority: Pubkey)]
+    pub struct CreateEscrowAta<'info> {
+        #[account(mut)]
+        pub payer: Signer<'info>,
+
+        #[account(
+            mut,
+            seeds = [
+                b"track".as_ref(), 
+                authority.key().as_ref(), 
+                track_id.to_le_bytes().as_ref()
+                ],
+            bump,
+        )]
+        pub track: Account<'info, Track>,
+
+        ///CHECK: ATA for mint
+        #[account(mut)]
+        pub escrow_token_account: UncheckedAccount<'info>,
+
+        pub mint: Account<'info, Mint>,
+
+        pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
+        pub token_program: Program<'info, Token>,
+        pub system_program: Program<'info, System>,
+
+    }
 
 
     #[event]
