@@ -9,14 +9,13 @@ declare_id!("9NVaiC6n62KnMtVYUCcfdDY1KdAFNyZmnopdhTcvHnwJ");
 
 pub const MAX_TITLE_LEN: usize = 64;
 pub const MAX_CID_LEN: usize = 128;
-pub const MAX_CONTRIBUTORS: usize = 16; // configurable upper bound
+pub const MAX_CONTRIBUTORS: usize = 16; 
 
 #[program]
 pub mod muzica {
     use super::*;
 
-    /// Initialize a Track account (PDA) that stores metadata and contributor shares.
-
+  
     pub fn initialize_track(
         ctx: Context<InitializeTrack>,
         track_id: u64,

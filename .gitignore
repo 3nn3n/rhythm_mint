@@ -50,4 +50,4 @@ next-env.d.ts
 /anchor/target/.rustc_info.json
 test-ledger
 **/*.rs.bk
-/anchor/programs/muzica/src/misc
+/anchor/programs/muzica/src/misc.rs
