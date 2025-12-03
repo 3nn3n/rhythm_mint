@@ -1,55 +1,120 @@
-import {
-  Blockhash,
-  createSolanaClient,
-  createTransaction,
-  Instruction,
-  KeyPairSigner,
-  signTransactionMessageWithSigners,
-} from 'gill'
-import { getGreetInstruction } from '../src'
-// @ts-ignore error TS2307 suggest setting `moduleResolution` but this is already configured
-import { loadKeypairSignerFromFile } from 'gill/node'
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import {Muzica}  from "../target/types/muzica";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 
-const { rpc, sendAndConfirmTransaction } = createSolanaClient({ urlOrMoniker: process.env.ANCHOR_PROVIDER_URL! })
-describe('muzica', () => {
-  let payer: KeyPairSigner
+vi.setConfig({ testTimeout: 600000 });
+
+
+
+describe("muzica", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+  const wallet = provider.wallet as anchor.Wallet;
+
+  const program = anchor.workspace.Muzica as Program<Muzica>;
+  let trackId: anchor.BN;
+  let trackPda: anchor.web3.PublicKey;
 
   beforeAll(async () => {
-    payer = await loadKeypairSignerFromFile(process.env.ANCHOR_WALLET!)
+
+    trackId = new anchor.BN(1);
+
+    // Derive PDA with correct seeds: [b"track", authority, track_id]
+    [trackPda] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("track"),
+        wallet.publicKey.toBuffer(),
+        new anchor.BN(trackId).toArrayLike(Buffer, "le", 8),
+      ],
+      program.programId
+    );
+
+
   })
 
-  it('should run the program and print "GM!" to the transaction log', async () => {
-    // ARRANGE
-    expect.assertions(1)
-    const ix = getGreetInstruction()
 
-    // ACT
-    const sx = await sendAndConfirm({ ix, payer })
+  it("initialize track", async () => {
 
-    // ASSERT
-    expect(sx).toBeDefined()
-    console.log('Transaction signature:', sx)
-  })
-})
+    
+    const initializeTrackIx = await program.methods
+      .initializeTrack(
+        trackId,
+        "My First Track",
+        "An awesome track", 
+        Array(32).fill(0),
+        [wallet.publicKey],
+        [10000]
+      )
+      .accounts({
+        authority: wallet.publicKey,
+        // track: trackPda is NOT needed - Anchor derives it automatically
+      })
+      .instruction();
 
-// Helper function to keep the tests DRY
-let latestBlockhash: Awaited<ReturnType<typeof getLatestBlockhash>> | undefined
-async function getLatestBlockhash(): Promise<Readonly<{ blockhash: Blockhash; lastValidBlockHeight: bigint }>> {
-  if (latestBlockhash) {
-    return latestBlockhash
-  }
-  return await rpc
-    .getLatestBlockhash()
-    .send()
-    .then(({ value }) => value)
-}
-async function sendAndConfirm({ ix, payer }: { ix: Instruction; payer: KeyPairSigner }) {
-  const tx = createTransaction({
-    feePayer: payer,
-    instructions: [ix],
-    version: 'legacy',
-    latestBlockhash: await getLatestBlockhash(),
-  })
-  const signedTransaction = await signTransactionMessageWithSigners(tx)
-  return await sendAndConfirmTransaction(signedTransaction)
-}
+
+    let blockhashContext = await provider.connection.getLatestBlockhash();
+
+    const tx = new anchor.web3.Transaction({
+      feePayer: wallet.publicKey,
+      blockhash: blockhashContext.blockhash,
+      lastValidBlockHeight: blockhashContext.lastValidBlockHeight,
+    }).add(initializeTrackIx);
+
+    const signedTx = await anchor.web3.sendAndConfirmTransaction(
+      provider.connection,
+      tx,
+      [wallet.payer]
+    );
+    
+    console.log("Transaction signature", signedTx);
+
+    const trackAccount = await program.account.track.fetch(trackPda);
+    console.log("Track Account:", trackAccount);
+    
+    expect(trackAccount.trackId.toNumber()).to.equal(1);
+    expect(trackAccount.title).to.equal("My First Track");
+    expect(trackAccount.cid).to.equal("An awesome track");
+    expect(trackAccount.contributors.length).to.equal(1);
+    expect(trackAccount.contributors[0].toBase58()).to.equal(wallet.publicKey.toBase58());
+    expect(trackAccount.shares[0]).to.equal(10000);
+  });
+
+  it("stem mint", async () => {
+
+    const stemMintPubkey = anchor.web3.Keypair.generate().publicKey;
+
+    const stemMintIx = await program.methods
+      .stemMint(
+        trackId,           // track_id parameter needed for PDA derivation
+        stemMintPubkey     // stem_mint parameter
+      )
+      .accounts({
+        authority: wallet.publicKey,
+        // track is NOT needed - Anchor derives it from seeds
+      })
+      .instruction();
+
+    let blockhashContext = await provider.connection.getLatestBlockhash();
+
+    const tx = new anchor.web3.Transaction({
+      feePayer: wallet.publicKey,
+      blockhash: blockhashContext.blockhash,
+      lastValidBlockHeight: blockhashContext.lastValidBlockHeight,
+    }).add(stemMintIx);
+
+    const signedTx = await anchor.web3.sendAndConfirmTransaction(
+      provider.connection,
+      tx,
+      [wallet.payer]
+    );
+
+    console.log("Transaction signature", signedTx);
+
+    const trackAccount = await program.account.track.fetch(trackPda);
+    console.log("Track Account:", trackAccount);
+
+    expect(trackAccount.stemMints.length).to.equal(1);
+    expect(trackAccount.stemMints[0].toBase58()).to.equal(stemMintPubkey.toBase58());
+  });
+});
