@@ -15,9 +15,6 @@ export type Muzica = {
   "instructions": [
     {
       "name": "initializeTrack",
-      "docs": [
-        "Initialize a Track account (PDA) that stores metadata and contributor shares."
-      ],
       "discriminator": [
         14,
         160,
@@ -116,6 +113,7 @@ export type Muzica = {
       "accounts": [
         {
           "name": "authority",
+          "writable": true,
           "signer": true
         },
         {
@@ -155,6 +153,70 @@ export type Muzica = {
           "type": "pubkey"
         }
       ]
+    },
+    {
+      "name": "updateShares",
+      "discriminator": [
+        31,
+        59,
+        15,
+        141,
+        227,
+        50,
+        179,
+        253
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "track",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  99,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "trackId"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "trackId",
+          "type": "u64"
+        },
+        {
+          "name": "newSharesBps",
+          "type": {
+            "vec": "u16"
+          }
+        },
+        {
+          "name": "contributors",
+          "type": {
+            "vec": "pubkey"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -173,6 +235,19 @@ export type Muzica = {
     }
   ],
   "events": [
+    {
+      "name": "sharesUpdated",
+      "discriminator": [
+        137,
+        176,
+        34,
+        123,
+        204,
+        48,
+        204,
+        136
+      ]
+    },
     {
       "name": "trackInitialized",
       "discriminator": [
@@ -245,6 +320,32 @@ export type Muzica = {
     }
   ],
   "types": [
+    {
+      "name": "sharesUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "trackId",
+            "type": "u64"
+          },
+          {
+            "name": "newShares",
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "oldVersion",
+            "type": "u32"
+          },
+          {
+            "name": "newVersion",
+            "type": "u32"
+          }
+        ]
+      }
+    },
     {
       "name": "track",
       "type": {

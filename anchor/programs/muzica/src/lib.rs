@@ -68,13 +68,65 @@ pub mod muzica {
 
     }
 
+    pub fn update_shares(ctx: Context<UpdateShares>, track_id: u64, new_shares_bps: Vec<u16>, contributors: Vec<Pubkey>) -> Result<()> {
+
+        let track = &mut ctx.accounts.track;
+        require!(track.track_id == track_id, ErrorCode::InvalidArgs);
+        require!(new_shares_bps.len() == contributors.len(), ErrorCode::InvalidRecipientCount);
+
+        let sum: u64 = new_shares_bps.iter().map(|s| *s as u64).sum();
+        require!(sum == 10000, ErrorCode::InvalidShareTotal);
+
+        let old_version = track.royalty_version;
+        track.shares = new_shares_bps.clone();
+
+        track.royalty_version = old_version.checked_add(1).unwrap();
+
+        emit!(SharesUpdated {
+            track_id: track.track_id,
+            new_shares: new_shares_bps,
+            old_version,
+            new_version: track.royalty_version,
+        });
+
+        Ok(())
+
+    }
 }
+
+
+    #[event]
+    pub struct SharesUpdated {
+        pub track_id: u64,
+        pub new_shares: Vec<u16>,
+        pub old_version: u32,
+        pub new_version: u32,
+    }
+
+    #[derive(Accounts)]
+    #[instruction(track_id: u64)]
+    pub struct UpdateShares<'info> {
+        #[account(mut)]
+        pub authority: Signer<'info>,
+
+        #[account(
+            mut,
+            seeds = [
+                b"track".as_ref(), 
+                authority.key().as_ref(), 
+                track_id.to_le_bytes().as_ref()
+                ],
+            bump,
+        )]
+        pub track: Account<'info, Track>,
+    }
+
 
 
     #[derive(Accounts)]
     #[instruction(track_id: u64)]
     pub struct StemMint<'info> {
-
+        #[account(mut)]
         pub authority: Signer<'info>,
 
         #[account(

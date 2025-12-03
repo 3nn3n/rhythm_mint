@@ -117,4 +117,47 @@ describe("muzica", () => {
     expect(trackAccount.stemMints.length).to.equal(1);
     expect(trackAccount.stemMints[0].toBase58()).to.equal(stemMintPubkey.toBase58());
   });
+
+  it("update shares", async () => {
+
+    const newSharesBps = [8000, 2000]; // change from 10000 to 8000
+
+    const updateSharesIx = await program.methods
+      .updateShares(
+        trackId,          // track_id parameter needed for PDA derivation
+        newSharesBps,
+        [wallet.publicKey, wallet.publicKey] // contributors parameter
+      )
+      .accounts({
+        authority: wallet.publicKey,
+        // track is NOT needed - Anchor derives it from seeds
+      })
+      .instruction();
+
+    let blockhashContext = await provider.connection.getLatestBlockhash();
+
+    const tx = new anchor.web3.Transaction({
+      feePayer: wallet.publicKey,
+      blockhash: blockhashContext.blockhash,
+      lastValidBlockHeight: blockhashContext.lastValidBlockHeight,
+    }).add(updateSharesIx);
+
+    const signedTx = await anchor.web3.sendAndConfirmTransaction(
+      provider.connection,
+      tx,
+      [wallet.payer]
+    );
+
+    console.log("Transaction signature", signedTx);
+
+    const trackAccount = await program.account.track.fetch(trackPda);
+    console.log("Track Account:", trackAccount);
+
+    expect(trackAccount.shares.length).to.equal(2);
+    expect(trackAccount.shares[0]).to.equal(8000);
+  });
+
+
+
+
 });

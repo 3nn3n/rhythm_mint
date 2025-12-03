@@ -9,9 +9,6 @@
   "instructions": [
     {
       "name": "initialize_track",
-      "docs": [
-        "Initialize a Track account (PDA) that stores metadata and contributor shares."
-      ],
       "discriminator": [
         14,
         160,
@@ -110,6 +107,7 @@
       "accounts": [
         {
           "name": "authority",
+          "writable": true,
           "signer": true
         },
         {
@@ -149,6 +147,70 @@
           "type": "pubkey"
         }
       ]
+    },
+    {
+      "name": "update_shares",
+      "discriminator": [
+        31,
+        59,
+        15,
+        141,
+        227,
+        50,
+        179,
+        253
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "track",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  99,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "track_id"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "track_id",
+          "type": "u64"
+        },
+        {
+          "name": "new_shares_bps",
+          "type": {
+            "vec": "u16"
+          }
+        },
+        {
+          "name": "contributors",
+          "type": {
+            "vec": "pubkey"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -167,6 +229,19 @@
     }
   ],
   "events": [
+    {
+      "name": "SharesUpdated",
+      "discriminator": [
+        137,
+        176,
+        34,
+        123,
+        204,
+        48,
+        204,
+        136
+      ]
+    },
     {
       "name": "TrackInitialized",
       "discriminator": [
@@ -239,6 +314,32 @@
     }
   ],
   "types": [
+    {
+      "name": "SharesUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "track_id",
+            "type": "u64"
+          },
+          {
+            "name": "new_shares",
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "old_version",
+            "type": "u32"
+          },
+          {
+            "name": "new_version",
+            "type": "u32"
+          }
+        ]
+      }
+    },
     {
       "name": "Track",
       "type": {
