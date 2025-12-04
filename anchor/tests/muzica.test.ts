@@ -227,13 +227,13 @@ it ("create escrow", async () => {
   console.log("Escrow Account Info:", escrowAccountInfo);
 
   expect(escrowAccountInfo).to.not.be.null;
-});
+  });
 
   it ("deposit to escrow", async () => {
 
     
 
-    const depositAmount = 1_000_000;
+    const depositAmount = 2_000_000;
 
     const depositEscrowIx = await program.methods
       .escrowDeposit(
@@ -267,5 +267,53 @@ it ("create escrow", async () => {
     console.log("Deposited", depositAmount, "tokens to escrow account");
   
   });
+
+  it ("distribute from escrow", async () => {
+
+    // Get the contributor's token account (wallet.publicKey is the only contributor)
+    const contributorAta = await getAssociatedTokenAddress(
+      mintPublicKey,
+      wallet.publicKey,
+      false
+    );
+
+    const distributeIx = await program.methods
+      .escrowDistribute(
+        new anchor.BN(1_000_000),
+        trackId,
+      )
+      .accounts({
+        escrowTokenAccount: escrowAta,
+      })
+      .remainingAccounts([
+        {
+          pubkey: contributorAta,
+          isWritable: true,
+          isSigner: false,
+        }
+      ])
+      .instruction();
+
+    let blockhashContext = await provider.connection.getLatestBlockhash();
+
+    const tx = new anchor.web3.Transaction({
+      feePayer: wallet.publicKey,
+      blockhash: blockhashContext.blockhash,
+      lastValidBlockHeight: blockhashContext.lastValidBlockHeight,
+    }).add(distributeIx);
+
+    const signedTx = await anchor.web3.sendAndConfirmTransaction(
+      provider.connection,
+      tx,
+      [wallet.payer]
+    );
+
+    console.log("Transaction signature", signedTx);
+
+    console.log("Distributed tokens from escrow to contributors");
+  
+  });
+
+
 
 });

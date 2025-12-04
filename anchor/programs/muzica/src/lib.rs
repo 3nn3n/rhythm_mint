@@ -1,6 +1,6 @@
 
 use anchor_lang::prelude::*;
-use anchor_spl::token:: {Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
 use anchor_spl::associated_token;
 
 declare_id!("9NVaiC6n62KnMtVYUCcfdDY1KdAFNyZmnopdhTcvHnwJ");
@@ -11,6 +11,7 @@ pub const MAX_CONTRIBUTORS: usize = 16;
 
 #[program]
 pub mod muzica {
+
     use super::*;
 
   
@@ -139,7 +140,112 @@ pub mod muzica {
     }
 
 
+    pub fn escrow_distribute<'info>(ctx: Context<'_, '_, '_, 'info, EscrowDistribute<'info>>, amount: u64, track_id: u64) -> Result<()> {
+
+        //whenever you are reading from multiple accounts in a loop you have to clone the data you need first to avoid borrow checker issues
+        // trust me i tried for 2 days
+
+        require!(amount > 0, ErrorCode::InvalidAmount);
+        require!(ctx.accounts.track.track_id == track_id, ErrorCode::InvalidArgs);
+        require!(ctx.accounts.escrow_token_account.owner == ctx.accounts.track.key(), ErrorCode::InvalidTokenAccountOwner);
+
+        let track = &ctx.accounts.track;
+        let total_bps: u64 = track.shares.iter().map(|s| *s as u64).sum();
+        require!(total_bps == 10000, ErrorCode::InvalidShareTotal);
+
+        // Clone all data we need. if you dont do it you run into borrow checker issues in the loop. like me
+        let contributors = track.contributors.clone();
+        let shares = track.shares.clone();
+        let track_bump = track.bump;
+        let escrow_mint = ctx.accounts.escrow_token_account.mint;
+
+        // Get references to account infos
+        let escrow_account_info = ctx.accounts.escrow_token_account.to_account_info();
+        let track_account_info = ctx.accounts.track.to_account_info();
+        let token_program_info = ctx.accounts.token_program.to_account_info();
+
+        for (i, contributor) in contributors.iter().enumerate() {
+            let share_bps = shares[i] as u64;
+            let share_amount = amount * share_bps / 10000;
+
+            if share_amount == 0 {
+                continue;
+            }
+
+            let contributor_token_account = anchor_spl::associated_token::get_associated_token_address(
+                contributor,
+                &escrow_mint,
+            );
+
+            
+            let to_account = ctx.remaining_accounts
+                .iter()
+                .find(|acc| acc.key() == contributor_token_account)
+                .ok_or(ErrorCode::InvalidArgs)?;
+
+            let authority_key = ctx.accounts.authority.key();
+            let seeds = &[
+                b"track".as_ref(),
+                authority_key.as_ref(),
+                &track_id.to_le_bytes(),
+                &[track_bump],
+            ];
+            let signer = &[&seeds[..]];
+
+            let cpi_accounts = Transfer {
+                from: escrow_account_info.clone(),
+                to: to_account.clone(),
+                authority: track_account_info.clone(),
+            };
+            let cpi_ctx = CpiContext::new_with_signer(token_program_info.clone(), cpi_accounts, signer);
+            anchor_spl::token::transfer(cpi_ctx, share_amount)?;
+        }
+
+        Ok(())
+    }
+
+
+
+
+
 }
+
+
+    #[derive(Accounts)]
+    #[instruction(amount: u64, track_id: u64)]
+    pub struct EscrowDistribute<'info> {
+
+        #[account(
+            mut,
+            seeds = [
+                b"track".as_ref(), 
+                authority.key().as_ref(), 
+                track_id.to_le_bytes().as_ref()
+                ],
+            bump,
+            has_one = authority,
+        )]
+        pub track: Account<'info, Track>,
+
+        #[account(mut)]
+        pub escrow_token_account: Account<'info, TokenAccount>,
+
+        ///CHECK: This is the PDA authority for the track
+        #[account(
+            seeds = [
+                b"track".as_ref(), 
+                authority.key().as_ref(), 
+                track_id.to_le_bytes().as_ref()
+                ],
+            bump = track.bump
+        )]
+        pub track_authority: UncheckedAccount<'info>,
+
+        pub authority: Signer<'info>,
+
+        pub token_program: Program<'info, Token>,
+    }
+
 
 
     #[event]
@@ -171,6 +277,7 @@ pub mod muzica {
 
         #[account(mut)]
         pub payer_token_account: Account<'info, TokenAccount>,
+
 
         pub token_program: Program<'info, Token>,
 
@@ -330,5 +437,4 @@ pub enum ErrorCode {
     InvalidTokenAccountOwner,
     #[msg("Recipient count must match contributor count")]
     InvalidRecipientCount,
-}       
-
+}

@@ -160,6 +160,97 @@ export type Muzica = {
       ]
     },
     {
+      "name": "escrowDistribute",
+      "discriminator": [
+        130,
+        202,
+        39,
+        127,
+        212,
+        7,
+        91,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "track",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  99,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "trackId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrowTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "trackAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  99,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "trackId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "track"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "trackId",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "initializeTrack",
       "discriminator": [
         14,
