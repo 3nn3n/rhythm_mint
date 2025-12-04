@@ -336,6 +336,198 @@ export type Muzica = {
       ]
     },
     {
+      "name": "mintStemNft",
+      "discriminator": [
+        193,
+        29,
+        124,
+        122,
+        204,
+        64,
+        87,
+        62
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "track",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  99,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "trackId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  101,
+                  109,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "track"
+              },
+              {
+                "kind": "arg",
+                "path": "nftIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipientTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "trackId",
+          "type": "u64"
+        },
+        {
+          "name": "nftIndex",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "stemMint",
       "discriminator": [
         200,
@@ -499,6 +691,19 @@ export type Muzica = {
       ]
     },
     {
+      "name": "stemNftMinted",
+      "discriminator": [
+        240,
+        111,
+        96,
+        87,
+        202,
+        195,
+        150,
+        170
+      ]
+    },
+    {
       "name": "trackInitialized",
       "discriminator": [
         46,
@@ -567,6 +772,11 @@ export type Muzica = {
       "code": 6010,
       "name": "invalidRecipientCount",
       "msg": "Recipient count must match contributor count"
+    },
+    {
+      "code": 6011,
+      "name": "notAContributor",
+      "msg": "The signer is not a contributor to this track"
     }
   ],
   "types": [
@@ -616,6 +826,26 @@ export type Muzica = {
           {
             "name": "newVersion",
             "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "stemNftMinted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "trackId",
+            "type": "u64"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
           }
         ]
       }

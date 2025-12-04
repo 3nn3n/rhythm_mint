@@ -155,13 +155,13 @@ describe("muzica", () => {
 
   it("update shares", async () => {
 
-    const newSharesBps = [8000, 2000]; 
+    const newSharesBps = [6000, 3000, 1000]; 
 
     const updateSharesIx = await program.methods
       .updateShares(
         trackId,          
         newSharesBps,
-        [wallet.publicKey, wallet.publicKey] 
+        [wallet.publicKey, wallet.publicKey, wallet.publicKey] 
       )
       .accounts({
         authority: wallet.publicKey,
@@ -188,8 +188,8 @@ describe("muzica", () => {
     const trackAccount = await program.account.track.fetch(trackPda);
     console.log("Track Account:", trackAccount);
 
-    expect(trackAccount.shares.length).to.equal(2);
-    expect(trackAccount.shares[0]).to.equal(8000);
+    expect(trackAccount.shares.length).to.equal(3);
+    expect(trackAccount.shares[0]).to.equal(6000);
   });
 
 it ("create escrow", async () => {
@@ -312,6 +312,44 @@ it ("create escrow", async () => {
 
     console.log("Distributed tokens from escrow to contributors");
   
+  });
+
+  it ("mint stem NFT", async () => {
+
+    const stemNftMintIx = await program.methods
+      .mintStemNft(
+        trackId, 
+        new anchor.BN(0)            
+      )
+      .accounts({
+        payer: wallet.publicKey,
+        authority: wallet.publicKey,
+      })
+      .instruction();
+
+    let blockhashContext = await provider.connection.getLatestBlockhash();
+
+    const tx = new anchor.web3.Transaction({
+      feePayer: wallet.publicKey,
+      blockhash: blockhashContext.blockhash,
+      lastValidBlockHeight: blockhashContext.lastValidBlockHeight,
+    }).add(stemNftMintIx);
+
+    const signedTx = await anchor.web3.sendAndConfirmTransaction(
+      provider.connection,
+      tx,
+      [wallet.payer]
+    );
+
+    console.log("Transaction signature", signedTx);
+
+    const trackAccount = await program.account.track.fetch(trackPda);
+    console.log("Track Account:", trackAccount);
+
+    expect(trackAccount.stemMints.length).to.equal(2);
+
+
+
   });
 
 

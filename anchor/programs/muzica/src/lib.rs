@@ -1,6 +1,6 @@
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{Mint, Token, TokenAccount, Transfer, SetAuthority, set_authority, mint_to, spl_token::instruction::AuthorityType};
 use anchor_spl::associated_token;
 
 declare_id!("9NVaiC6n62KnMtVYUCcfdDY1KdAFNyZmnopdhTcvHnwJ");
@@ -11,6 +11,8 @@ pub const MAX_CONTRIBUTORS: usize = 16;
 
 #[program]
 pub mod muzica {
+
+   
 
     use super::*;
 
@@ -206,9 +208,120 @@ pub mod muzica {
 
 
 
+    pub fn mint_stem_nft(ctx: Context<StemMintNFT>, track_id: u64, nft_index: u64) -> Result<()> {
+
+        let track = &mut ctx.accounts.track;
+        let track_authority = track.authority;
+        let track_bump = track.bump;
+        let mint_pubkey = ctx.accounts.mint.key();
+        let recipient = ctx.accounts.authority.key();
+
+        require!(track.track_id == track_id, ErrorCode::InvalidArgs);
+        
+        // Find the actual contributor index for the recipient
+        let actual_index = track.contributors
+            .iter()
+            .position(|c| c == &recipient)
+            .ok_or(ErrorCode::NotAContributor)? as u64;
+        
+        // Verify the passed index matches the actual contributor index
+        require!(nft_index == actual_index, ErrorCode::InvalidArgs);
+
+        let track_id_in_bytes = track_id.to_le_bytes();
+        let seeds = &[
+            b"track".as_ref(),
+            track_authority.as_ref(),
+            &track_id_in_bytes,
+            &[track_bump],
+        ];
+        let signer = &[&seeds[..]];
+
+        let cpi_accounts_mint = anchor_spl::token::MintTo {
+            mint: ctx.accounts.mint.to_account_info(),
+            to: ctx.accounts.recipient_token_account.to_account_info(),
+            authority: track.to_account_info(),
+        };
+
+        let cpi_program_mint = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx_mint = CpiContext::new_with_signer(
+            cpi_program_mint,
+            cpi_accounts_mint,
+            signer,
+        );
+        mint_to(cpi_ctx_mint, 1)?;
+
+        track.stem_mints.push(mint_pubkey);
+
+        emit!(StemNFTMinted {
+            track_id: track.track_id,
+            mint: mint_pubkey,
+            recipient: ctx.accounts.recipient_token_account.owner,
+        });
+
+        Ok(())
+    
+    }
+
 
 
 }
+
+    #[event]
+    pub struct StemNFTMinted {
+        pub track_id: u64,
+        pub mint: Pubkey,
+        pub recipient: Pubkey,
+    }
+
+
+
+    #[derive(Accounts)]
+    #[instruction(track_id: u64, nft_index: u64)]
+    pub struct StemMintNFT<'info> {
+
+        #[account(mut)]
+        pub payer: Signer<'info>,
+
+        #[account(
+            mut,
+            seeds = [
+                b"track".as_ref(), 
+                authority.key().as_ref(), 
+                track_id.to_le_bytes().as_ref()
+                ],
+            bump,
+        )]
+        pub track: Account<'info, Track>,
+
+        #[account(
+            init,
+            payer = payer,
+            seeds = [
+                b"stem_mint".as_ref(),
+                track.key().as_ref(),
+                &nft_index.to_le_bytes(),
+            ],
+            bump,
+            mint::decimals = 0,
+            mint::authority = track,
+        )]
+        pub mint: Account<'info, Mint>,
+
+        #[account(
+            init_if_needed,
+            payer = payer,
+            associated_token::mint = mint,
+            associated_token::authority = authority,
+        )]
+        pub recipient_token_account: Account<'info, TokenAccount>,
+
+        pub authority: Signer<'info>,
+
+        pub token_program: Program<'info, Token>,
+        pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
+        pub system_program: Program<'info, System>,
+
+    }
 
 
     #[derive(Accounts)]
@@ -437,4 +550,6 @@ pub enum ErrorCode {
     InvalidTokenAccountOwner,
     #[msg("Recipient count must match contributor count")]
     InvalidRecipientCount,
+    #[msg("The signer is not a contributor to this track")]
+    NotAContributor,
 }
