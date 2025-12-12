@@ -1,6 +1,7 @@
 # Muzica - Decentralized Music Platform
 
 **Muzica** is a next-generation decentralized music platform built on Solana blockchain, empowering artists to maintain full ownership, monetize their work transparently, and collaborate seamlessly.
+![alt text](<Screenshot 2025-12-12 113946.png>)
 
 ## What is Muzica?
 
@@ -8,9 +9,10 @@ Muzica revolutionizes the music industry by providing artists with complete cont
 
 ### Key Features
 
-####  Digital Audio Workspace
-- **Interactive DAW Interface**: Professional-grade landing page with playable tracks, mixer controls, and timeline visualization
 - **Real-time Audio Playback**: Stream tracks directly from IPFS with transport controls (play, pause, stop)
+![alt text](<Screenshot 2025-12-12 232622.png>)
+
+
 - **4-Channel Mixer**: Control individual stems (Vocals, Drums, Bass, Synth) with volume and pan adjustments
 - **Waveform Visualization**: Dynamic timeline showing audio progress and duration
 
