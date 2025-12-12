@@ -10,7 +10,6 @@ import { address, getProgramDerivedAddress, getAddressEncoder } from 'gill'
 export function useInitializeTrackMutation() {
   const { account } = useSolana()
   const signAndSend = useWalletUiSignAndSend()
-  const client = useWalletUiGill()
   const queryClient = useQueryClient()
   
   // Always call the hook to satisfy React Hooks rules

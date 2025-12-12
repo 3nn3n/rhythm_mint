@@ -12,7 +12,7 @@ export function useUpdateSharesMutation() {
   const signAndSend = useWalletUiSignAndSend()
   const queryClient = useQueryClient()
   
-  const txSigner = useWalletUiSigner(account ? { account } : undefined)
+  const txSigner = useWalletUiSigner(account ? { account } : { account: undefined as any })
 
   return useMutation({
     mutationFn: async ({

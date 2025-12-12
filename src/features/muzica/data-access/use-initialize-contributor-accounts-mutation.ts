@@ -72,11 +72,12 @@ export function useInitializeContributorAccountsMutation() {
       const tx = new VersionedTransaction(message)
       
       // Sign transaction using wallet
-      if (!(window as any).solana?.signTransaction) {
+      const solanaWallet = (window as { solana?: { signTransaction?: (tx: VersionedTransaction) => Promise<VersionedTransaction> } }).solana
+      if (!solanaWallet?.signTransaction) {
         throw new Error('Wallet does not support signing transactions')
       }
       
-      const signedTx = await (window as any).solana.signTransaction(tx)
+      const signedTx = await solanaWallet.signTransaction(tx)
       
       // Send transaction
       const signature = await connection.sendRawTransaction(signedTx.serialize(), {

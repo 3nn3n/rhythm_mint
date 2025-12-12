@@ -13,7 +13,7 @@ export function useMintStemNftMutation() {
   const queryClient = useQueryClient()
   const client = useWalletUiGill()
   
-  const txSigner = useWalletUiSigner(account ? { account } : { account: undefined as any })
+  const txSigner = useWalletUiSigner(account ? { account } : undefined)
 
   return useMutation({
     mutationFn: async ({
@@ -59,7 +59,7 @@ export function useMintStemNftMutation() {
           console.error('ERROR: Mint PDA already exists!', mintPda)
           throw new Error(`Stem NFT already minted for contributor index ${nftIndex}. Each contributor can only mint once.`)
         }
-      } catch (e) {
+      } catch {
         // Account doesn't exist - this is expected
         console.log('Mint PDA does not exist yet - good to proceed')
       }
@@ -85,7 +85,7 @@ export function useMintStemNftMutation() {
         const result = await signAndSend(instruction, txSigner)
         console.log('Transaction result:', result)
         return result
-      } catch (error: any) {
+      } catch (error) {
         console.error('Transaction error:', error)
         throw error
       }
