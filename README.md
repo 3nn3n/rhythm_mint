@@ -16,16 +16,27 @@ Muzica revolutionizes the music industry by providing artists with complete cont
 
 #### Track Management
 - **Upload Tracks**: Store your music on IPFS/Pinata with metadata stored on-chain
+
+![alt text](<Screenshot 2025-12-12 232639.png>)
 - **Stem NFTs**: Mint individual stem files (drums, vocals, bass, etc.) as NFTs for contributors
 - **Track Metadata**: Store title, artist, BPM, key, genre, and cover art CIDs
 
 ####  Revenue & Payments
+
+![alt text](<Screenshot 2025-12-12 232722.png>)
+![alt text](<Screenshot 2025-12-12 232746.png>)
+![alt text](<Screenshot 2025-12-12 232810.png>)
 - **Revenue Splits**: Define and manage contributor shares for each track
+
+![alt text](<Screenshot 2025-12-12 232824.png>)
+![alt text](<Screenshot 2025-12-12 234318.png>)
 - **Escrow System**: Secure USDC deposits with automated distribution to contributors
 - **Royalty Distribution**: Transparent on-chain payments based on defined splits
 - **Payment History**: Track all deposits and distributions with complete transparency
 
 #### NFT Marketplace
+
+![alt text](<Screenshot 2025-12-12 232650.png>)
 - **Mint NFTs**: Create NFTs for entire tracks or individual stems
 - **Contributor Recognition**: Award stem NFTs to collaborators (producers, mixing engineers, vocalists)
 - **Ownership Proof**: Immutable on-chain proof of creative contributions
