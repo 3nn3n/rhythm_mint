@@ -282,14 +282,12 @@ pub mod muzica {
         #[account(mut)]
         pub payer: Signer<'info>,
 
+        // Track account - just verify it's mutable and matches the track_id
+        // We don't use PDA seeds here because the track was created by a different authority
+        // The client must pass the correct track address
         #[account(
             mut,
-            seeds = [
-                b"track".as_ref(), 
-                authority.key().as_ref(), 
-                track_id.to_le_bytes().as_ref()
-                ],
-            bump,
+            constraint = track.track_id == track_id @ ErrorCode::InvalidArgs,
         )]
         pub track: Account<'info, Track>,
 
@@ -325,7 +323,7 @@ pub mod muzica {
 
 
     #[derive(Accounts)]
-    #[instruction(amount: u64, track_id: u64)]
+    #[instruction(track_id: u64, authority: Pubkey)]
     pub struct EscrowDistribute<'info> {
 
         #[account(
@@ -372,6 +370,7 @@ pub mod muzica {
     #[derive(Accounts)]
     #[instruction(amount: u64, track_id: u64, authority: Pubkey)]
     pub struct EscrowDeposit<'info> {
+        #[account(mut)]
         pub payer: Signer<'info>,
 
         #[account(
@@ -427,6 +426,7 @@ pub mod muzica {
 
     }
 
+    // Removed CreateEscrowAta struct - no longer needed for SOL-based escrow
 
     #[event]
     pub struct SharesUpdated {

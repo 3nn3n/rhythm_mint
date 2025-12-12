@@ -8,6 +8,9 @@ skip-lint = false
 [programs.localnet]
 muzica = "9NVaiC6n62KnMtVYUCcfdDY1KdAFNyZmnopdhTcvHnwJ"
 
+[programs.devnet]
+muzica = "9NVaiC6n62KnMtVYUCcfdDY1KdAFNyZmnopdhTcvHnwJ"
+
 [registry]
 url = "https://api.apr.dev"
 

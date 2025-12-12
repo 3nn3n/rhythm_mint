@@ -355,29 +355,7 @@ export type Muzica = {
         },
         {
           "name": "track",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  99,
-                  107
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "authority"
-              },
-              {
-                "kind": "arg",
-                "path": "trackId"
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "mint",
