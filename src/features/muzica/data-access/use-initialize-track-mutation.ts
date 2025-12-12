@@ -15,7 +15,7 @@ export function useInitializeTrackMutation() {
   
   // Always call the hook to satisfy React Hooks rules
   // Pass undefined if account is not available - will check in mutationFn
-  const txSigner = useWalletUiSigner(account ? { account } : { account: undefined as any })
+  const txSigner = useWalletUiSigner(account ? { account } : undefined)
 
   return useMutation({
     mutationFn: async ({
@@ -60,7 +60,7 @@ export function useInitializeTrackMutation() {
         title,
         cid,
         masterHash,
-        contributors: contributors.map((c) => address(c)),
+        contributors: contributors.map((contributorAddress) => address(contributorAddress)),
         sharesBps,
         authority: txSigner,
         track: trackPda,
@@ -69,7 +69,7 @@ export function useInitializeTrackMutation() {
 
       console.log('Track PDA:', trackPda)
       console.log('Instruction:', instruction)
-      console.log('Instruction accounts:', instruction.accounts.map((acc: any) => ({
+      console.log('Instruction accounts:', instruction.accounts.map((acc: { address: string; role: number }) => ({
         address: acc.address,
         role: acc.role,
       })))
@@ -83,7 +83,7 @@ export function useInitializeTrackMutation() {
         const result = await signAndSend(instruction, txSigner)
         console.log('Transaction result:', result)
         return result
-      } catch (error: any) {
+      } catch (error) {
         console.error('Transaction error:', error)
         
         // Try to parse the error string for more details

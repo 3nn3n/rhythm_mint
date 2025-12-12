@@ -12,7 +12,7 @@ export function useUpdateSharesMutation() {
   const signAndSend = useWalletUiSignAndSend()
   const queryClient = useQueryClient()
   
-  const txSigner = useWalletUiSigner(account ? { account } : { account: undefined as any })
+  const txSigner = useWalletUiSigner(account ? { account } : undefined)
 
   return useMutation({
     mutationFn: async ({
@@ -54,7 +54,7 @@ export function useUpdateSharesMutation() {
         const result = await signAndSend(instruction, txSigner)
         console.log('Transaction result:', result)
         return result
-      } catch (error: any) {
+      } catch (error) {
         console.error('Transaction error:', error)
         throw error
       }

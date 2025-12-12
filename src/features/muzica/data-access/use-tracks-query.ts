@@ -102,7 +102,7 @@ export function useTracksQuery({ authority }: { authority?: string }) {
       console.log('Number of tracks found:', response.value.length)
 
       // Decode the accounts manually
-      const tracks = response.value.map((account: any) => {
+      const tracks = response.value.map((account: { pubkey: string; account: { data: [string, string] } }) => {
         console.log('Decoding account:', account.pubkey)
         try {
           // Decode base64 data

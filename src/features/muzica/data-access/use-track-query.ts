@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { useWalletUiGill } from '@wallet-ui/react-gill'
-import { MUZICA_PROGRAM_ADDRESS } from '@project/anchor'
 import { address } from 'gill'
 
 // Manual decoder for Track account
