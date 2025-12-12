@@ -13,8 +13,6 @@ Muzica revolutionizes the music industry by providing artists with complete cont
 ![alt text](<Screenshot 2025-12-12 232622.png>)
 
 
-- **4-Channel Mixer**: Control individual stems (Vocals, Drums, Bass, Synth) with volume and pan adjustments
-- **Waveform Visualization**: Dynamic timeline showing audio progress and duration
 
 #### Track Management
 - **Upload Tracks**: Store your music on IPFS/Pinata with metadata stored on-chain
