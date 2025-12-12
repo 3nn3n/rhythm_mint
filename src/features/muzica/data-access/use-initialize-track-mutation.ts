@@ -10,11 +10,12 @@ import { address, getProgramDerivedAddress, getAddressEncoder } from 'gill'
 export function useInitializeTrackMutation() {
   const { account } = useSolana()
   const signAndSend = useWalletUiSignAndSend()
+  const client = useWalletUiGill()
   const queryClient = useQueryClient()
   
   // Always call the hook to satisfy React Hooks rules
   // Pass undefined if account is not available - will check in mutationFn
-  const txSigner = useWalletUiSigner(account ? { account } : undefined)
+  const txSigner = useWalletUiSigner(account ? { account } : { account: undefined as any })
 
   return useMutation({
     mutationFn: async ({
@@ -68,7 +69,7 @@ export function useInitializeTrackMutation() {
 
       console.log('Track PDA:', trackPda)
       console.log('Instruction:', instruction)
-      console.log('Instruction accounts:', instruction.accounts.map((acc: { address: string; role: number }) => ({
+      console.log('Instruction accounts:', instruction.accounts.map((acc: any) => ({
         address: acc.address,
         role: acc.role,
       })))
@@ -82,7 +83,7 @@ export function useInitializeTrackMutation() {
         const result = await signAndSend(instruction, txSigner)
         console.log('Transaction result:', result)
         return result
-      } catch (error) {
+      } catch (error: any) {
         console.error('Transaction error:', error)
         
         // Try to parse the error string for more details
