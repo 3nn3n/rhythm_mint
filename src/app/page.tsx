@@ -18,23 +18,19 @@ export default function Home() {
   const [currentTrackName, setCurrentTrackName] = useState('Demo Track')
   const [waveformHeights, setWaveformHeights] = useState<number[]>([])
 
-  // Generate static waveform heights on mount
   useEffect(() => {
     const heights = Array.from({ length: 60 }, () => Math.random() * 70 + 30)
     setWaveformHeights(heights)
   }, [])
 
   useEffect(() => {
-    // Create audio element
     const audio = new Audio()
     audio.volume = masterVolume / 100
     
-    // Select random track from actual tracks or use demo
     let trackUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
     let trackName = 'Demo Track'
     
     if (tracks && tracks.length > 0) {
-      // Filter tracks that have a valid CID
       const validTracks = tracks.filter((t: any) => t.account?.data?.cid && t.account.data.cid.length > 5)
       
       if (validTracks.length > 0) {
@@ -48,17 +44,13 @@ export default function Home() {
     audio.src = trackUrl
     setCurrentTrackName(trackName)
     
-    // Update time as audio plays
     audio.addEventListener('timeupdate', () => {
       setCurrentTime(audio.currentTime)
     })
     
-    // Update duration when loaded
     audio.addEventListener('loadedmetadata', () => {
-      // Duration will be set from actual audio
     })
     
-    // Reset when ended
     audio.addEventListener('ended', () => {
       setIsPlaying(false)
       setCurrentTime(0)
@@ -92,7 +84,6 @@ export default function Home() {
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isPlaying && !audioElement) {
-      // Fallback animation if audio doesn't load
       interval = setInterval(() => {
         setCurrentTime((prev) => {
           if (prev >= duration) {
